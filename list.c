@@ -84,12 +84,29 @@ void list_destruct(list_t *list_ptr)
     {
       free(list_ptr->head->data_ptr);
       list_ptr->head->data_ptr = NULL;
+      free(list_ptr->head);
       list_ptr->head = NULL;
       list_ptr->tail = NULL;
+      free(list_ptr);
+      list_ptr = NULL;
     }
+// current will serve as the back part of the list, previous the front
+    list_node_t * current = list_ptr->head;
+    list_node_t * previous = list_ptr->head;
+    while(current->prev != NULL)
+      current = current->next;
 
+    previous = current->prev;
 
-
+    while(previous != NULL)
+    {
+      free(current->data_ptr);
+      current->data_ptr = NULL;
+      current = previous;
+      free(current->next);
+      current->next = NULL;
+      previous = previous->prev;
+    }
 
 }
 
