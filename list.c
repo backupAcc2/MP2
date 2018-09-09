@@ -47,6 +47,7 @@ list_t *list_construct(int (*fcomp)(const data_t *, const data_t *))
     L->tail = NULL;
     L->current_list_size = 0;
     L->list_sorted_state = SORTED_LIST;
+    L->comp_proc = fcomp;
 
     // the last line of this function must call validate
     list_debug_validate(L);
@@ -78,9 +79,13 @@ void list_destruct(list_t *list_ptr)
     // add your code after this line
     // check to see if list has any values
     if(list_ptr->current_list_size == 0)
-        return;
+    {
+      free(list_ptr);
+      list_ptr = NULL;
+    }
+
     // check to see if list has one value
-    if(list_ptr->current_list_size == 1)
+    else if(list_ptr->current_list_size == 1)
     {
       free(list_ptr->head->data_ptr);
       list_ptr->head->data_ptr = NULL;
@@ -90,22 +95,36 @@ void list_destruct(list_t *list_ptr)
       free(list_ptr);
       list_ptr = NULL;
     }
-// current will serve as the back part of the list, previous the front
-    list_node_t * current = list_ptr->head;
-    list_node_t * previous = list_ptr->head;
-    while(current->prev != NULL)
-      current = current->next;
 
-    previous = current->prev;
-
-    while(previous != NULL)
+    else
     {
+      // current will serve as the back part of the list, previous the front
+      list_node_t * current = list_ptr->head;
+      list_node_t * previous = list_ptr->head;
+      while(current->next != NULL)
+        current = current->next;
+
+      previous = current->prev;
+
+      while(previous != NULL)
+      {
+        // free the data_ptr
+        free(current->data_ptr);
+        current->data_ptr = NULL;
+        current = previous;
+        // free the node
+        free(current->next);
+        current->next = NULL;
+        previous = previous->prev;
+      }
+      // free the last node and data_t
       free(current->data_ptr);
       current->data_ptr = NULL;
-      current = previous;
-      free(current->next);
-      current->next = NULL;
-      previous = previous->prev;
+      free(current);
+      current = NULL;
+      // free the list_t
+      free(list_ptr);
+      list_ptr = NULL;
     }
 
 }
@@ -161,7 +180,19 @@ list_node_t * list_iter_next(list_node_t * idx_ptr)
 list_node_t * list_elem_find(list_t *list_ptr, data_t *elem_ptr)
 {
     list_debug_validate(list_ptr);
+  // MY CODE
+    if (list_ptr->current_list_size == 0)
+        return NULL;
 
+    list_node_t * current = list_ptr->head;
+
+    while(current != NULL)
+    {
+      if(current->data_ptr->su_id == elem_ptr->su_id)
+        return current;
+      current = current->next;
+    }
+  // END MY CODE
     return NULL;
 }
 
@@ -197,8 +228,68 @@ void list_insert_sorted(list_t *list_ptr, data_t *elem_ptr)
     assert(NULL != list_ptr);
     assert(SORTED_LIST == list_ptr->list_sorted_state);
 
-    // insert your code here
+  // MY CODE
+    list_node_t *newNode = (list_node_t*)malloc(sizeof(list_node_t));
+  // check to see if list is empty
+    if(list_ptr->current_list_size == 0)
+    {
+      list_ptr->head = newNode;
+      list_ptr->tail = newNode;
+      newNode->next = NULL;
+      newNode->prev = NULL;
+      newNode->data_ptr = elem_ptr;
+    }
 
+    else
+    {
+      // insert newNode at front of list, then sort
+      list_node_t * first = list_ptr->head;
+      list_node_t * second;
+      first->prev = newNode;
+      newNode->next = first;
+      newNode->prev = NULL;
+      newNode->data_ptr = elem_ptr;
+      list_ptr->head = newNode;
+
+      int size = list_size(list_ptr);
+      int compVal;
+      first = list_ptr->head;
+      second = first->next;
+      data_t * tempData;
+      for(int i = 0; i < size; i++)
+      {
+        compVal = list_ptr->comp_proc(first->data_ptr,second->data_ptr);
+        if (compVal == 1)
+        {
+          // leave how is
+          first=first->next;
+          second=second->next;
+        }
+        else if(compVal == -1)
+        {
+          // swap the data values
+          tempData = first->data_ptr;
+          first->data_ptr = second->data_ptr;
+          second->data_ptr = tempData;
+        }
+        else
+        {
+          // get to the end of all the data_t's of equal rank
+          while(list_ptr->comp_proc(first->data_ptr,second->data_ptr) == 0)
+          {
+            second=second->next;
+            // move newNode to after second
+            tempData = first->data_ptr;
+            first->data_ptr = second->data_ptr;
+            second->data_ptr = tempData;
+          }
+        }
+      }
+    }
+
+
+    list_ptr->current_list_size++;
+  // END MY CODE
     // the last line of this function must be the following
     list_debug_validate(list_ptr);
 }
@@ -240,7 +331,49 @@ void list_insert(list_t *list_ptr, data_t *elem_ptr, list_node_t * idx_ptr)
 {
     assert(NULL != list_ptr);
 
-    // insert your code after this line
+    // MY CODE
+    list_node_t *newNode = (list_node_t*)malloc(sizeof(list_node_t));
+  // check to see if list is empty
+    if(list_ptr->current_list_size == 0)
+    {
+      list_ptr->head = newNode;
+      list_ptr->tail = newNode;
+      newNode->next = NULL;
+      newNode->prev = NULL;
+    }
+
+  // if idx_ptr == NULL, insert at back of list
+    else if(idx_ptr == NULL)
+    {
+      list_node_t * temp = list_ptr->tail;
+      newNode->prev = list_ptr->tail;
+      newNode->next = NULL;
+      temp->next = newNode;
+      list_ptr->tail = newNode;
+    }
+
+    else
+    {
+      // check to see if iterator is front of list
+      if(list_ptr->head == idx_ptr)
+      {
+        newNode->prev = NULL;
+        newNode->next = list_ptr->head;
+        list_ptr->head = newNode;
+      }
+      else
+      {
+        list_node_t * temp = idx_ptr->prev;
+        newNode->next = idx_ptr;
+        newNode->prev = idx_ptr->prev;
+        idx_ptr->prev = newNode;
+        temp->next = newNode;
+      }
+    }
+
+    newNode->data_ptr = elem_ptr;
+    list_ptr->current_list_size++;
+    // END MY CODE
 
     // the last two lines of this function must be the following
     if (list_ptr->list_sorted_state == SORTED_LIST)
@@ -282,13 +415,58 @@ data_t * list_remove(list_t *list_ptr, list_node_t * idx_ptr)
 {
     assert(NULL != list_ptr);
     if (0 == list_ptr->current_list_size)
-	assert(idx_ptr == NULL);
+  	assert(idx_ptr == NULL);
 
-    // insert your code after this line
+    // MY CODE
+    if (idx_ptr==NULL || list_ptr->current_list_size == 0)
+        return NULL;
+
+    data_t * su_data = idx_ptr->data_ptr;
+    // check to see if there is only one node
+      if(list_ptr->current_list_size == 1)
+      {
+        idx_ptr->prev = NULL;
+        idx_ptr->next = NULL;
+        list_ptr->head = NULL;
+        list_ptr->tail = NULL;
+        free(idx_ptr);
+      }
+    // check if this is the head or tail
+      else if (list_ptr->head == idx_ptr)
+      {
+        list_node_t * idxNext = idx_ptr->next;
+        idx_ptr->prev = NULL;
+        idx_ptr->next = NULL;
+        free(idx_ptr);
+        list_ptr->head = idxNext;
+        idxNext->prev = NULL;
+      }
+      else if(list_ptr->tail == idx_ptr)
+      {
+        list_node_t * idxPrev = idx_ptr->prev;
+        idx_ptr->prev = NULL;
+        idx_ptr->next = NULL;
+        free(idx_ptr);
+        list_ptr->tail = idxPrev;
+        idxPrev->next = NULL;
+      }
+      else
+      {
+        list_node_t * idxPrev = idx_ptr->prev;
+        list_node_t * idxNext = idx_ptr->next;
+        idx_ptr->prev = NULL;
+        idx_ptr->next = NULL;
+        free(idx_ptr);
+        idxPrev->next = idxNext;
+        idxNext->prev = idxPrev;
+      }
+
+    list_ptr->current_list_size--;
+    // END MY CODE
 
     // the last line should verify the list is valid after the remove
     list_debug_validate(list_ptr);
-    return NULL;  // fix the return value
+    return su_data;  // fix the return value
 }
 
 /* Return a pointer to an element stored in the list, at the Iterator position
@@ -313,7 +491,7 @@ data_t * list_access(list_t *list_ptr, list_node_t * idx_ptr)
     // debugging function to verify that the structure of the list is valid
     list_debug_validate(list_ptr);
 
-    return NULL;   // you have to fix the return value
+    return idx_ptr->data_ptr;   // you have to fix the return value
 }
 
 /* This function verifies that the pointers for the two-way linked list are

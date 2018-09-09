@@ -68,7 +68,9 @@ void sas_print(ListPtr list_ptr, char *type_of_list)
     assert(strcmp(type_of_list, "Assigned List")==0
             || strcmp(type_of_list, "Waiting Queue")==0);
     IteratorPtr index;
-    int num_in_list = 0;
+    // MY CODE
+    int num_in_list = list_size(list_ptr);
+    // END MY CODE
     int counter = 0;
 
     if (num_in_list == 0) {
@@ -139,8 +141,49 @@ void sas_add(ListPtr assn_ptr, int size, ListPtr wait_ptr)
     rec_ptr = (su_info_t *) calloc(1, sizeof(su_info_t));
     sas_record_fill(rec_ptr);
 
-    // figure out how to add and set add_action
+  // MY CODE
+    // see if rec_ptr->su_id is in the assigned list
+    IteratorPtr list_node = list_elem_find(assn_ptr, rec_ptr);
+    if(list_node)
+    {
+      // the rec_ptr is already in the assigned list, check channel id's
+      data_t * node_data = list_access(assn_ptr, list_node);
+      if(node_data->channel == rec_ptr->channel)
+      {
+        // update the information for the secondary user
+        node_data = list_remove(assn_ptr, list_node);
+        free(node_data);
+        list_insert_sorted(assn_ptr, rec_ptr);
+        add_action = 0;
+      }
+      // if channel id's are different, remove node from assigned list and
+      // place the updated data_t from rec_ptr in the waiting queue
+      else
+      {
+        list_remove(assn_ptr, list_node);
+        list_insert(wait_ptr, rec_ptr, NULL);
+        add_action = 1;
+      }
+    }
 
+    else
+    {
+      // determine if rec_ptr is in waiting queue
+      list_node = list_elem_find(wait_ptr, rec_ptr);
+      if(list_node)
+      {
+        // if in waiting queue, update the secondary user info
+        list_insert(wait_ptr, rec_ptr, list_node);
+        list_node = list_iter_next(list_node);
+        list_remove(wait_ptr, list_node);
+        add_action = 2;
+      }
+      // add to tail of waiting queue
+      list_insert(wait_ptr, rec_ptr, NULL);
+      add_action = 3;
+    }
+
+  // END MY CODE
     if (add_action == 3) {
         printf("Inserted new waiting SU: %d\n", rec_ptr->su_id);
     } else if (add_action == 0) {
@@ -186,6 +229,24 @@ void sas_remove(ListPtr assn_list, ListPtr wait_q, int su_id)
     int assigned_or_waiting = -1;
 
     // use list_elem_find and list_remove
+    // MY CODE
+    rec_ptr->su_id = su_id;
+    list_node_t * list_node = list_elem_find(assn_list, rec_ptr);
+    if (list_node)
+    {
+      rec_ptr = list_remove(assn_list, list_node);
+      assigned_or_waiting = 0;
+    }
+    else
+    {
+      list_node = list_elem_find(wait_q, rec_ptr);
+      if(list_node)
+      {
+        rec_ptr = list_remove(wait_q, list_node);
+        assigned_or_waiting = 1;
+      }
+    }
+    // END MY CODE
 
     if (rec_ptr == NULL) {
         printf("Did not remove: %d\n", su_id);
@@ -248,6 +309,22 @@ void sas_assign(ListPtr assn_ptr, int size, ListPtr wait_q, int channel)
     su_info_t *rec_ptr = NULL;
     int assign_action = -2;
 
+    // MY CODE
+    if (list_size(wait_q) < 1)
+      assign_action = 0;
+
+    else if (list_size(assn_ptr) == size)
+      assign_action = 1;
+
+    else
+    {
+      rec_ptr = list_remove(wait_q, list_iter_front(wait_q));
+      rec_ptr->channel = channel;
+      list_insert_sorted(assn_ptr, rec_ptr);
+      assign_action = 2;
+    }
+    // END MY CODE
+
     if (assign_action == 0) {
         printf("No secondary users are waiting\n");
     } else if (assign_action == 1) {
@@ -265,8 +342,10 @@ void sas_assign(ListPtr assn_ptr, int size, ListPtr wait_q, int channel)
 void sas_stats(ListPtr sorted, int sorted_size, ListPtr unsorted)
 {
     // get the number in list and size of the list
-    int num_in_list = 0;   // fix!
-    int num_in_queue = 0;
+    // MY CODE
+    int num_in_list = list_size(sorted);
+    int num_in_queue = list_size(unsorted);
+    // END MY CODE
     printf("List records:  %d, Max list size: %d  ",
             num_in_list, sorted_size);
     printf("Queue records: %d\n", num_in_queue);
@@ -276,6 +355,7 @@ void sas_stats(ListPtr sorted, int sorted_size, ListPtr unsorted)
  */
 void sas_cleanup(ListPtr list_ptr)
 {
+  list_destruct(list_ptr);
 }
 
 /* Checks for a invalid channel number.  Channel numbers must be 1:10
