@@ -188,7 +188,9 @@ list_node_t * list_elem_find(list_t *list_ptr, data_t *elem_ptr)
 
     while(current != NULL)
     {
-      if(current->data_ptr->su_id == elem_ptr->su_id)
+      // could not use comp_proc on the following line because wait_q does
+      // not have one 
+      if (current->data_ptr->su_id == elem_ptr->su_id)
         return current;
       current = current->next;
     }

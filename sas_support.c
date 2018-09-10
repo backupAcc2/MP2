@@ -160,7 +160,8 @@ void sas_add(ListPtr assn_ptr, int size, ListPtr wait_ptr)
       // place the updated data_t from rec_ptr in the waiting queue
       else
       {
-        list_remove(assn_ptr, list_node);
+        node_data = list_remove(assn_ptr, list_node);
+        free(node_data);
         list_insert(wait_ptr, rec_ptr, NULL);
         add_action = 1;
       }
@@ -175,7 +176,8 @@ void sas_add(ListPtr assn_ptr, int size, ListPtr wait_ptr)
         // if in waiting queue, update the secondary user info
         list_insert(wait_ptr, rec_ptr, list_node);
         list_node = list_iter_next(list_node);
-        list_remove(wait_ptr, list_node);
+        data_t * node_data = list_remove(wait_ptr, list_node);
+        free(node_data);
         add_action = 2;
       }
       // add to tail of waiting queue
@@ -204,7 +206,7 @@ void sas_add(ListPtr assn_ptr, int size, ListPtr wait_ptr)
 void sas_lookup(ListPtr list_ptr, int channel_no)
 {
     su_info_t *rec_ptr = NULL;
-    int i, num_in_list = 0;   // fix!
+    int i, num_in_list = list_size(list_ptr);   // fix!
 
     if (num_in_list == 0) {
         printf("List is empty: no users on ch %d\n", channel_no);
@@ -212,9 +214,14 @@ void sas_lookup(ListPtr list_ptr, int channel_no)
         printf("Assignment list has %d records.  Looking for SUs on ch %d\n",
                 num_in_list, channel_no);
         // print record of each user on channel
+      // MY CODE
+        IteratorPtr current = list_iter_front(list_ptr);
         for (i = 0; i < num_in_list; i++) {
-            rec_ptr = NULL;    // hint: review the sas_print function
+          rec_ptr = list_access(list_ptr, current);
+          if (rec_ptr->channel == channel_no)
             sas_record_print(rec_ptr);
+          current = list_iter_next(current);
+        // END MY CODE
         }
     }
     rec_ptr = NULL;
@@ -230,8 +237,9 @@ void sas_remove(ListPtr assn_list, ListPtr wait_q, int su_id)
 
     // use list_elem_find and list_remove
     // MY CODE
-    rec_ptr->su_id = su_id;
-    list_node_t * list_node = list_elem_find(assn_list, rec_ptr);
+    data_t temp;
+    temp.su_id = su_id;
+    list_node_t * list_node = list_elem_find(assn_list, &temp);
     if (list_node)
     {
       rec_ptr = list_remove(assn_list, list_node);
@@ -239,7 +247,7 @@ void sas_remove(ListPtr assn_list, ListPtr wait_q, int su_id)
     }
     else
     {
-      list_node = list_elem_find(wait_q, rec_ptr);
+      list_node = list_elem_find(wait_q, &temp);
       if(list_node)
       {
         rec_ptr = list_remove(wait_q, list_node);
@@ -254,11 +262,13 @@ void sas_remove(ListPtr assn_list, ListPtr wait_q, int su_id)
         assert(rec_ptr->su_id == su_id);
         printf("Removed: %d from assigned list\n", su_id);
         sas_record_print(rec_ptr);
+        free(rec_ptr);
     } else if (assigned_or_waiting == 1) {
         assert(rec_ptr->su_id == su_id);
         printf("Removed: %d from waiting queue\n", su_id);
         sas_record_print(rec_ptr);
     }
+
     rec_ptr = NULL;
 }
 

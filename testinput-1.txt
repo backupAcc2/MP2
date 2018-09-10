@@ -78,7 +78,6 @@ STATS
 To determine if test 4 passes look for 2 records, and 111 record should be
 updated with Time as 4.  Stats should still be 3 records, size 3
 
-QUIT
 TEST 5: look for a record in the list and one not in list
 
 LISTCH 1
@@ -100,6 +99,7 @@ standard
 1
 10.222
 5
+
 ASSIGNSU 2
 ASSIGNSU 1
 PRINTASSIGNED
@@ -124,6 +124,7 @@ should be printed with 2 records.
 TEST 8: Test changing channels
 
 CHANGECH 2 3
+QUIT
 LISTCH 2
 LISTCH 3
 PRINTASSIGNED
