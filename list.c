@@ -274,6 +274,8 @@ void list_insert_sorted(list_t *list_ptr, data_t *elem_ptr)
           tempData = first->data_ptr;
           first->data_ptr = second->data_ptr;
           second->data_ptr = tempData;
+          first=first->next;
+          second=second->next;
         }
         else
         {

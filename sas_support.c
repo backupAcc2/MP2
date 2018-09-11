@@ -284,6 +284,7 @@ void sas_remove(ListPtr assn_list, ListPtr wait_q, int su_id)
         assert(rec_ptr->su_id == su_id);
         printf("Removed: %d from waiting queue\n", su_id);
         sas_record_print(rec_ptr);
+        free(rec_ptr);
     }
 
     rec_ptr = NULL;

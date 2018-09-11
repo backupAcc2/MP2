@@ -149,4 +149,27 @@ TEST 11 - try to move an item to assigned list when wait queue is empty
 ASSIGNSU 4
 PRINTASSIGNED
 PRINTWAITING
+
+TEST 12 - Try to add the same user twice with exact same records
+ADDSU
+24
+333
+202
+T
+standard
+3.3
+2
+10.222
+7
+ADDSU
+24
+333
+202
+T
+standard
+3.3
+2
+10.222
+7
+PRINTWAITING
 QUIT

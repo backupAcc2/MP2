@@ -99,7 +99,6 @@ standard
 1
 10.222
 5
-
 ASSIGNSU 2
 ASSIGNSU 1
 PRINTASSIGNED
@@ -116,7 +115,6 @@ DELSU 551
 DELSU 552
 PRINTASSIGNED
 PRINTWAITING
-PRINT
 
 To verify test 7, should see removed 551, did not remove 552, and final list
 should be printed with 2 records.
