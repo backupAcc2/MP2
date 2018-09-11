@@ -74,12 +74,6 @@ int main(int argc, char * argv[])
                 printf("Cannot create list: invalid size %d\n", sorted_size);
             } else {
                 // clean up old list if necessary and create a new empty one
-              // MY CODE
-                if(assigned_list)
-                  list_destruct(assigned_list);
-                if(waiting_list)
-                  list_destruct(waiting_list);
-              // END MY CODEa
                 printf("Assignment list size limit: %d\n", sorted_size);
                 assigned_list = sas_create(assigned_list, "assignment list");
                 waiting_list = sas_create(waiting_list, "waiting queue");
@@ -120,8 +114,10 @@ int main(int argc, char * argv[])
         } else if (num_items == 1 && strcmp(command, "STATS") == 0) {
             sas_stats(assigned_list, sorted_size, waiting_list);
         } else if (num_items == 1 && strcmp(command, "QUIT") == 0) {
-            sas_cleanup(assigned_list);
-            sas_cleanup(waiting_list);
+            if(assigned_list)
+              sas_cleanup(assigned_list);
+            if(waiting_list)
+              sas_cleanup(waiting_list);
             printf("Goodbye\n");
             break;
         } else {

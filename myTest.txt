@@ -1,0 +1,152 @@
+Heath Gerrald
+ECE 2230, MP2, Fall 2018
+myTest.txt
+
+TEST 1 - try to work commands without a list
+CHANGECH 2 3
+LISTCH 3
+ASSIGNSU 4
+CLEARCH 4
+DELSU 51
+STATS
+PRINTASSIGNED
+PRINTWAITING
+ADDSU
+222
+333
+202
+T
+standard
+3.3
+1
+10.222
+5
+
+
+TEST 2 - create a list, try to change channels that have no records
+CREATE 4
+ADDSU
+222
+333
+202
+T
+standard
+3.3
+1
+10.222
+5
+CHANGECH 3 4
+
+
+TEST 3 - clear/print channels with no records
+CLEARCH 2
+PRINTASSIGNED
+
+
+TEST 4 - Fill up the assigned list
+ADDSU
+190
+333
+202
+T
+standard
+3.3
+1
+10.222
+5
+ADDSU
+195
+333
+202
+T
+standard
+3.3
+1
+10.222
+5
+ADDSU
+24
+333
+202
+T
+standard
+3.3
+1
+10.222
+5
+ASSIGNSU 1
+ASSIGNSU 1
+ASSIGNSU 2
+ASSIGNSU 2
+PRINTASSIGNED
+PRINTWAITING
+
+TEST 5 - try to add to the assigned list when it is full
+ADDSU
+38
+333
+202
+T
+standard
+3.3
+1
+10.222
+5
+ASSIGNSU 3
+PRINTASSIGNED
+PRINTWAITING
+
+TEST 6 - Update a record in the waiting list
+ADDSU
+38
+333
+202
+T
+standard
+3.3
+4
+10.222
+3
+PRINTWAITING
+
+TEST 7 - Update a record in the assigned list with a different channel
+ADDSU
+190
+333
+202
+T
+standard
+3.3
+3
+10.222
+6
+PRINTASSIGNED
+PRINTWAITING
+
+
+TEST 8 - Update a record in the assigned list with a same channel
+ADDSU
+24
+333
+202
+T
+standard
+3.3
+2
+10.222
+7
+PRINTASSIGNED
+
+TEST 9 - Create a new list
+CREATE 1
+
+TEST 10 - Remove/clear/list items from a list with no users
+DELSU 42
+CLEARCH 3
+LISTCH 4
+
+TEST 11 - try to move an item to assigned list when wait queue is empty
+ASSIGNSU 4
+PRINTASSIGNED
+PRINTWAITING
+QUIT

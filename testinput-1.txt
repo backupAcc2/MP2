@@ -124,7 +124,6 @@ should be printed with 2 records.
 TEST 8: Test changing channels
 
 CHANGECH 2 3
-QUIT
 LISTCH 2
 LISTCH 3
 PRINTASSIGNED

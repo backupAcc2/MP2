@@ -4,11 +4,14 @@
  * ECE 2230 Fall 2018
  * MP2
  *
- * Propose: A template for list.c. You will make many changes.
+ * Propose: A template for list.c. Uses two-way linked lists to run commands
+ * needed for sas_support.c
  *
- * Assumptions: Many details are incomplete.
+ * Assumptions: I will need to finish these functions before moving on to
+ * sas_support.c. It is important that I know when/if to allocate memory and
+ * if so when to free it.
  *
- * Bugs: Many detail have not been implemented.
+ * Bugs: None to my knowledge
  */
 
 #include <stdlib.h>
@@ -188,9 +191,7 @@ list_node_t * list_elem_find(list_t *list_ptr, data_t *elem_ptr)
 
     while(current != NULL)
     {
-      // could not use comp_proc on the following line because wait_q does
-      // not have one 
-      if (current->data_ptr->su_id == elem_ptr->su_id)
+      if (list_ptr->comp_proc(elem_ptr, current->data_ptr) == 0)
         return current;
       current = current->next;
     }
@@ -362,6 +363,7 @@ void list_insert(list_t *list_ptr, data_t *elem_ptr, list_node_t * idx_ptr)
         newNode->prev = NULL;
         newNode->next = list_ptr->head;
         list_ptr->head = newNode;
+        idx_ptr->prev = newNode;
       }
       else
       {

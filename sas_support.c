@@ -4,11 +4,16 @@
  * ECE 2230 Fall 2018
  * MP2
  *
- * Propose: A template for MP2
+ * Purpose: The purpose was to become familiar with linked lists and keeping
+ * track of pointers. A proper understanding of malloc and free was also
+ * required to complete the project.
  *
- * Assumptions:
+ * Assumptions: There will be a heavy use of linked lists. To prepare for this
+ * I need to familiarize myself with pointers and draw a lot of pictures. It
+ * will also be important to understand when to free memory to avoid memory
+ * leaks.
  *
- * Bugs:
+ * Bugs: None to my knowledge
  *
  * You can modify the interface for any of the sas_ functions if you like
  * But you must clearly document your changes.
@@ -65,6 +70,9 @@ int sas_compare(const su_info_t *record_a, const su_info_t *record_b)
  */
 void sas_print(ListPtr list_ptr, char *type_of_list)
 {
+    if(!list_ptr)
+      return;
+
     assert(strcmp(type_of_list, "Assigned List")==0
             || strcmp(type_of_list, "Waiting Queue")==0);
     IteratorPtr index;
@@ -105,13 +113,11 @@ void sas_print(ListPtr list_ptr, char *type_of_list)
 ListPtr sas_create(ListPtr list_ptr, const char *type)
 {
     int (*comp_function) (const su_info_t *, const su_info_t *);
-    if (strcmp(type, "assignment list") == 0)
-        comp_function = sas_compare;
-    else
-        comp_function = NULL;
+    comp_function = sas_compare;
 
     if (list_ptr != NULL) {
         printf("Replacing existing %s\n", type);
+        list_destruct(list_ptr);
     } else {
         printf("New %s\n", type);
     }
@@ -136,6 +142,9 @@ ListPtr sas_create(ListPtr list_ptr, const char *type)
  */
 void sas_add(ListPtr assn_ptr, int size, ListPtr wait_ptr)
 {
+    if(!wait_ptr)
+      return;
+
     int add_action = -2;
     su_info_t *rec_ptr;
     rec_ptr = (su_info_t *) calloc(1, sizeof(su_info_t));
@@ -175,14 +184,16 @@ void sas_add(ListPtr assn_ptr, int size, ListPtr wait_ptr)
       {
         // if in waiting queue, update the secondary user info
         list_insert(wait_ptr, rec_ptr, list_node);
-        list_node = list_iter_next(list_node);
         data_t * node_data = list_remove(wait_ptr, list_node);
         free(node_data);
         add_action = 2;
       }
+      else
+      {
       // add to tail of waiting queue
-      list_insert(wait_ptr, rec_ptr, NULL);
-      add_action = 3;
+        list_insert(wait_ptr, rec_ptr, NULL);
+        add_action = 3;
+      }
     }
 
   // END MY CODE
@@ -205,6 +216,9 @@ void sas_add(ListPtr assn_ptr, int size, ListPtr wait_ptr)
  */
 void sas_lookup(ListPtr list_ptr, int channel_no)
 {
+    if(!list_ptr)
+      return;
+
     su_info_t *rec_ptr = NULL;
     int i, num_in_list = list_size(list_ptr);   // fix!
 
@@ -232,6 +246,9 @@ void sas_lookup(ListPtr list_ptr, int channel_no)
  */
 void sas_remove(ListPtr assn_list, ListPtr wait_q, int su_id)
 {
+    if(!assn_list)
+      return;
+
     su_info_t *rec_ptr = NULL;
     int assigned_or_waiting = -1;
 
@@ -280,7 +297,29 @@ void sas_remove(ListPtr assn_list, ListPtr wait_q, int su_id)
  */
 void sas_move(ListPtr assn_list, int channel, ListPtr wait_q)
 {
+    if(!assn_list)
+      return;
+
     int count_removed = 0;
+
+    // MY CODE
+    IteratorPtr current = list_iter_front(assn_list);
+    data_t * checkVal;
+    while(current != NULL)
+    {
+      checkVal = list_access(assn_list, current);
+      if(checkVal && checkVal->channel == channel)
+      {
+        checkVal = list_remove(assn_list, current);
+        list_insert(wait_q, checkVal, NULL);
+        count_removed++;
+        // get the iterator back in the assn_list
+        current = list_iter_front(assn_list);
+      }
+      else
+        current = list_iter_next(current);
+    }
+    // END MY CODE
 
     if (count_removed == 0) {
         printf("Did not find any users on channel %d\n", channel);
@@ -294,7 +333,25 @@ void sas_move(ListPtr assn_list, int channel, ListPtr wait_q)
  */
 void sas_change(ListPtr list_ptr, int old_channel, int new_channel)
 {
+    if(!list_ptr)
+      return;
+
     int count_moved = 0;
+
+    // MY CODE
+    IteratorPtr current = list_iter_front(list_ptr);
+    data_t * checkVal;
+    for(int i = 0; i < list_size(list_ptr); i++)
+    {
+      checkVal = list_access(list_ptr, current);
+      if (checkVal && checkVal->channel == old_channel)
+      {
+        checkVal->channel = new_channel;
+        count_moved++;
+      }
+      current = list_iter_next(current);
+    }
+    // END MY CODE
 
     if (count_moved == 0) {
         printf("Did not find any users on channel %d\n", old_channel);
@@ -316,6 +373,9 @@ void sas_change(ListPtr list_ptr, int old_channel, int new_channel)
  */
 void sas_assign(ListPtr assn_ptr, int size, ListPtr wait_q, int channel)
 {
+    if(!wait_q)
+      return;
+
     su_info_t *rec_ptr = NULL;
     int assign_action = -2;
 
@@ -353,6 +413,9 @@ void sas_stats(ListPtr sorted, int sorted_size, ListPtr unsorted)
 {
     // get the number in list and size of the list
     // MY CODE
+    if(!unsorted)
+      return;
+
     int num_in_list = list_size(sorted);
     int num_in_queue = list_size(unsorted);
     // END MY CODE
@@ -365,6 +428,8 @@ void sas_stats(ListPtr sorted, int sorted_size, ListPtr unsorted)
  */
 void sas_cleanup(ListPtr list_ptr)
 {
+  if(!list_ptr)
+    return;
   list_destruct(list_ptr);
 }
 
