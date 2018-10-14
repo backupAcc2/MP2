@@ -256,7 +256,7 @@ void sas_remove(ListPtr assn_list, ListPtr wait_q, int su_id)
     // MY CODE
     data_t temp;
     temp.su_id = su_id;
-    list_node_t * list_node = list_elem_find(assn_list, &temp);
+    IteratorPtr list_node = list_elem_find(assn_list, &temp);
     if (list_node)
     {
       rec_ptr = list_remove(assn_list, list_node);
